@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: shell('Circulation','circulation',~{::content})}">
+<body><section th:fragment="content">
+    <div class="page-heading"><div><span class="eyebrow">LENDING DESK</span><h1>Circulation <em>at a glance.</em></h1><p class="muted">Issue, return and renew with the collection always in balance.</p></div></div>
+    <div class="flash success" th:if="${success}" th:text="${success}"></div><div class="flash error" th:if="${error}" th:text="${error}"></div>
+    <div class="circulation-grid">
+        <section class="panel issue-panel"><div class="panel-heading"><div><span class="eyebrow">QUICK ACTION</span><h2>Issue a title</h2></div><span class="action-icon">↗</span></div>
+            <form th:action="@{/circulation/issue}" method="post" class="stack-form">
+                <label for="memberId">Reader</label><select name="memberId" id="memberId" required><option value="">Choose a member</option><option th:each="member : ${members}" th:value="${member.id}" th:text="${member.fullName + ' · ' + member.email}"></option></select>
+                <label for="bookId">Available title</label><select name="bookId" id="bookId" data-cover-select="issue" required><option value="">Choose an available book</option><option th:each="book : ${books}" th:if="${book.availableCopies > 0}" th:value="${book.id}" th:text="${book.title + ' · ' + book.availableCopies + ' available · ' + (book.shelfLocation ?: 'shelf not set')}" th:attr="data-cover=${book.coverUrl},data-title=${book.title},data-author=${book.author}"></option></select><div class="cover-selection-preview" data-cover-preview="issue" aria-live="polite"><span class="cover-preview-empty">Choose a title to preview its cover.</span></div>
+                <p class="form-hint">Standard loan: 14 days · 3 active loans per reader · ₹2/day after due date.</p>
+                <button class="button button-dark button-wide" type="submit">Issue selected book <span>→</span></button>
+            </form>
+        </section>
+        <section class="panel reserve-panel"><div class="panel-heading"><div><span class="eyebrow">SMART RESERVATION QUEUE</span><h2>Reserve a title</h2></div><span class="action-icon">⌁</span></div>
+            <form th:action="@{/circulation/reserve}" method="post" class="stack-form">
+                <label for="reserveMember">Reader</label><select name="memberId" id="reserveMember" required><option value="">Choose a member</option><option th:each="member : ${members}" th:value="${member.id}" th:text="${member.fullName}"></option></select>
+                <label for="reserveBook">Unavailable title</label><select name="bookId" id="reserveBook" data-cover-select="reservation" required><option value="">Choose a title</option><option th:each="book : ${books}" th:if="${book.availableCopies == 0}" th:value="${book.id}" th:text="${book.title + ' · ' + (book.shelfLocation ?: 'location not set')}" th:attr="data-cover=${book.coverUrl},data-title=${book.title},data-author=${book.author}"></option></select><div class="cover-selection-preview" data-cover-preview="reservation" aria-live="polite"><span class="cover-preview-empty">Choose a title to preview its cover.</span></div>
+                <p class="form-hint">When a copy returns, the next eligible reader gets a two-day collection hold.</p>
+                <button class="button button-outline button-wide" type="submit">Join waiting list <span>→</span></button>
+            </form>
+        </section>
+    </div>
+    <section class="panel recent-panel"><div class="panel-heading"><div><span class="eyebrow">LOAN REGISTER</span><h2>Loans & returns</h2></div><div class="filter-tabs"><a th:href="@{/circulation(status='all')}" th:classappend="${status == 'all'} ? 'selected' : ''">All</a><a th:href="@{/circulation(status='active')}" th:classappend="${status == 'active'} ? 'selected' : ''">Active</a><a th:href="@{/circulation(status='overdue')}" th:classappend="${status == 'overdue'} ? 'selected' : ''">Overdue</a><a th:href="@{/circulation(status='returned')}" th:classappend="${status == 'returned'} ? 'selected' : ''">Returned</a></div></div>
+        <div class="table-wrap"><table><thead><tr><th>READER / TITLE</th><th>ISSUED</th><th>DUE</th><th>OVERDUE / FINE</th><th>STATUS</th><th>ACTION</th></tr></thead><tbody>
+            <tr th:each="loan : ${loans}">
+                <td><strong th:text="${loan.member.fullName}">Member</strong><small class="table-sub" th:text="${loan.book.title}">Book</small></td><td th:text="${loan.issueDate}">Issue</td><td th:text="${loan.dueDate}">Due</td>
+                <td th:if="${loan.status.name() == 'ACTIVE' and loan.dueDate.isBefore(today)}"><strong class="text-danger" th:text="${T(java.time.temporal.ChronoUnit).DAYS.between(loan.dueDate,today)} + ' days'">0</strong><small class="table-sub">potential ₹<span th:text="${#numbers.formatDecimal(T(java.time.temporal.ChronoUnit).DAYS.between(loan.dueDate,today)*fineRate,1,2)}">0.00</span></small></td>
+                <td th:unless="${loan.status.name() == 'ACTIVE' and loan.dueDate.isBefore(today)}"><strong th:text="'₹' + ${#numbers.formatDecimal(loan.fine,1,2)} + ' assessed'">₹0.00 assessed</strong><small class="table-sub" th:if="${loan.fine.signum() > 0}">outstanding ₹<span th:text="${#numbers.formatDecimal(outstandingByLoan[loan.id],1,2)}">0.00</span> · paid ₹<span th:text="${#numbers.formatDecimal(paidByLoan[loan.id],1,2)}">0.00</span></small><small class="table-sub" th:unless="${loan.fine.signum() > 0}">—</small></td>
+                <td><span class="status" th:classappend="${loan.status.name() == 'RETURNED'} ? 'status-returned' : (${loan.dueDate.isBefore(today)} ? 'status-overdue' : 'status-active')" th:text="${loan.status.name() == 'RETURNED' ? 'Returned' : (loan.dueDate.isBefore(today) ? 'Overdue' : 'On loan')}">Active</span></td>
+                <td><div class="row-actions" th:if="${loan.status.name() == 'ACTIVE'}"><form th:action="@{/circulation/{id}/return(id=${loan.id})}" method="post"><button class="tiny-button" type="submit">Return</button></form><form th:action="@{/circulation/{id}/renew(id=${loan.id})}" method="post"><button class="tiny-button muted-button" type="submit">Renew</button></form></div><form th:if="${outstandingByLoan[loan.id].signum() > 0}" th:action="@{/circulation/{id}/payment(id=${loan.id})}" method="post" class="payment-inline"><input name="amount" type="number" step="0.01" min="0.01" th:max="${outstandingByLoan[loan.id]}" placeholder="₹ amount" required><select name="method" aria-label="Payment method"><option>Cash</option><option>UPI</option><option>Card</option><option>Bank transfer</option></select><button class="tiny-button" type="submit">Pay</button></form></td>
+            </tr><tr th:if="${#lists.isEmpty(loans)}"><td colspan="6" class="table-empty">No loans match this view.</td></tr>
+        </tbody></table></div>
+    </section>
+    <section class="panel recent-panel"><div class="panel-heading"><div><span class="eyebrow">WAITING LIST</span><h2>Reservations</h2></div><span class="count-pill" th:text="${#lists.size(reservations)} + ' active'">0 active</span></div>
+        <div class="table-wrap"><table><thead><tr><th>QUEUE</th><th>TITLE</th><th>READER</th><th>STATUS</th><th>HOLD EXPIRY</th><th></th></tr></thead><tbody>
+            <tr th:each="reservation,iter : ${reservations}"><td th:text="'#' + ${iter.count}">#1</td><td th:text="${reservation.book.title}">Title</td><td th:text="${reservation.member.fullName}">Member</td><td><span class="status" th:classappend="${reservation.status.name() == 'READY'} ? 'status-active' : 'status-waiting'" th:text="${reservation.status}">WAITING</span></td><td th:text="${reservation.expiresAt ?: '—'}">—</td><td><form th:action="@{/circulation/reservations/{id}/cancel(id=${reservation.id})}" method="post"><button class="text-link" type="submit">Cancel</button></form></td></tr>
+            <tr th:if="${#lists.isEmpty(reservations)}"><td colspan="6" class="table-empty">The reservation queue is clear.</td></tr>
+        </tbody></table></div><div class="panel-foot"><span>On return, the first eligible reader receives a 2-day hold.</span><span>Queue updates are transactionally processed.</span></div>
+    </section>
+    <section class="panel recent-panel"><div class="panel-heading"><div><span class="eyebrow">FINE LEDGER</span><h2>Recent payments</h2></div></div>
+        <div class="table-wrap"><table><thead><tr><th>READER</th><th>TITLE</th><th>DATE</th><th>METHOD</th><th>AMOUNT</th></tr></thead><tbody>
+            <tr th:each="payment : ${payments}"><td th:text="${payment.loan.member.fullName}">Reader</td><td th:text="${payment.loan.book.title}">Title</td><td th:text="${#temporals.format(payment.paidAt,'d MMM yyyy')}">Date</td><td th:text="${payment.method}">Cash</td><td th:text="'₹' + ${#numbers.formatDecimal(payment.amount,1,2)}">₹0</td></tr>
+            <tr th:if="${#lists.isEmpty(payments)}"><td colspan="5" class="table-empty">No fine payments have been recorded.</td></tr>
+        </tbody></table></div>
+    </section>
+</section></body></html>

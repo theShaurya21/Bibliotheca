@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: shell('Book details','books',~{::content})}">
+<body><section th:fragment="content">
+    <div class="page-heading"><div><span class="eyebrow">COLLECTION CARE</span><h1 th:text="${bookId == null ? 'Add a new title.' : 'Edit title.'}">Add a new title.</h1><p class="muted">Good records make good discoveries.</p></div><a class="text-link" th:href="@{/books}">← Back to catalogue</a></div>
+    <div class="panel form-panel">
+        <div class="flash error" th:if="${copyError}" th:text="${copyError}"></div>
+        <form th:action="@{/books/save}" th:object="${book}" method="post" class="form-grid">
+            <input th:if="${bookId != null}" type="hidden" name="id" th:value="${bookId}">
+            <div class="field full"><label for="title">Title <b>*</b></label><input id="title" th:field="*{title}" required maxlength="180"><small class="field-error" th:errors="*{title}"></small></div>
+            <div class="field"><label for="author">Author <b>*</b></label><input id="author" th:field="*{author}" required maxlength="180"><small class="field-error" th:errors="*{author}"></small></div>
+            <div class="field"><label for="isbn">ISBN</label><input id="isbn" th:field="*{isbn}" maxlength="20"><small class="field-error" th:errors="*{isbn}"></small></div>
+            <div class="field"><label for="category">Category</label><input id="category" th:field="*{category}" maxlength="80"></div>
+            <div class="field"><label for="publisher">Publisher</label><input id="publisher" th:field="*{publisher}" maxlength="140"></div>
+            <div class="field"><label for="publicationYear">Publication year</label><input id="publicationYear" type="number" th:field="*{publicationYear}" min="1000" max="2100"><small class="field-error" th:errors="*{publicationYear}"></small></div>
+            <div class="field"><label for="language">Language</label><input id="language" th:field="*{language}" maxlength="60"></div>
+            <div class="field"><label for="totalCopies">Total copies <b>*</b></label><input id="totalCopies" type="number" th:field="*{totalCopies}" min="0" required><small class="field-error" th:errors="*{totalCopies}"></small><small th:if="${book.id != null}">Existing loans are kept reserved from this count.</small></div>
+            <div class="field"><label for="shelfLocation">Smart shelf location</label><input id="shelfLocation" th:field="*{shelfLocation}" placeholder="Block A → Floor 2 → Shelf A-12" maxlength="140"></div>
+            <div class="field full"><label for="coverUrl">Cover image URL</label><input id="coverUrl" th:field="*{coverUrl}" type="url" maxlength="500" placeholder="https://…"></div>
+            <div class="field full"><label for="previewUrl">Digital preview URL</label><input id="previewUrl" th:field="*{previewUrl}" type="url" maxlength="500" placeholder="https://…"></div>
+            <div class="field full"><label for="description">Description</label><textarea id="description" th:field="*{description}" rows="4" maxlength="1500"></textarea></div>
+            <div class="field-error full" th:if="${#fields.hasErrors('*')}" th:text="'Please correct the highlighted fields.'"></div>
+            <div class="form-actions full"><a class="button button-outline" th:href="@{/books}">Cancel</a><button class="button button-dark" type="submit">Save title <span>→</span></button></div>
+        </form>
+    </div>
+</section></body></html>

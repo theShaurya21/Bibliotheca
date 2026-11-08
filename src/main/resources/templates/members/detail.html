@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: shell('Member profile','members',~{::content})}">
+<body><section th:fragment="content">
+    <div class="page-heading"><div><span class="eyebrow">MEMBER / READING INSIGHTS</span><h1>Reader <em>profile.</em></h1></div><a class="button button-gold" th:href="@{/members/{id}/edit(id=${member.id})}">Edit profile</a></div>
+    <section class="panel member-profile">
+        <span class="profile-avatar" th:text="${#strings.substring(member.fullName,0,1)}">M</span>
+        <div class="profile-info"><span class="eyebrow" th:text="${member.membershipType}">MEMBERSHIP</span><h2 th:text="${member.fullName}">Member Name</h2><p th:text="${member.email}">email</p><p th:text="${member.phone ?: 'Phone not recorded'}">phone</p></div>
+        <div class="profile-stats"><div><strong th:text="${activeLoanCount}">0</strong><small>active loans</small></div><div><strong th:text="${#lists.size(history)}">0</strong><small>books borrowed</small></div></div>
+        <div class="membership-card"><small>MEMBERSHIP STATUS</small><span class="status" th:classappend="${member.active and !member.membershipStart.isAfter(T(java.time.LocalDate).now()) and !member.membershipExpiry.isBefore(T(java.time.LocalDate).now())} ? 'status-active' : 'status-overdue'" th:text="${member.active and !member.membershipStart.isAfter(T(java.time.LocalDate).now()) and !member.membershipExpiry.isBefore(T(java.time.LocalDate).now())} ? 'Active' : 'Inactive / expired'">Active</span><p th:text="'Valid through ' + ${member.membershipExpiry}">Expiry</p>
+            <form th:action="@{/members/{id}/status(id=${member.id})}" method="post"><button type="submit" class="text-link" th:text="${member.active ? 'Deactivate membership' : 'Reactivate membership'}">Status</button></form>
+        </div>
+    </section>
+    <section class="panel recent-panel"><div class="panel-heading"><div><span class="eyebrow">READING HISTORY</span><h2>Borrowed titles</h2></div><a class="text-link" th:href="@{/circulation}">Issue a book ↗</a></div>
+        <div class="table-wrap"><table><thead><tr><th>TITLE</th><th>ISSUED</th><th>DUE</th><th>RETURNED</th><th>STATUS</th></tr></thead><tbody>
+            <tr th:each="loan : ${history}"><td class="book-title-cell" th:text="${loan.book.title}">Title</td><td th:text="${loan.issueDate}">Issue</td><td th:text="${loan.dueDate}">Due</td><td th:text="${loan.returnDate ?: '—'}">Return</td><td><span class="status" th:classappend="${loan.status.name() == 'RETURNED'} ? 'status-returned' : (${loan.dueDate.isBefore(T(java.time.LocalDate).now())} ? 'status-overdue' : 'status-active')" th:text="${loan.status.name() == 'RETURNED' ? 'Returned' : (loan.dueDate.isBefore(T(java.time.LocalDate).now()) ? 'Overdue' : 'On loan')}"></span></td></tr>
+            <tr th:if="${#lists.isEmpty(history)}"><td colspan="5" class="table-empty">Reading history will appear here as books are borrowed.</td></tr>
+        </tbody></table></div>
+    </section>
+    <section class="panel recent-panel"><div class="panel-heading"><div><span class="eyebrow">FINE PAYMENT HISTORY</span><h2>Recorded payments</h2></div></div>
+        <div class="table-wrap"><table><thead><tr><th>DATE</th><th>TITLE</th><th>METHOD</th><th>REFERENCE</th><th>AMOUNT</th></tr></thead><tbody>
+            <tr th:each="payment : ${finePayments}"><td th:text="${#temporals.format(payment.paidAt,'d MMM yyyy')}">date</td><td th:text="${payment.loan.book.title}">title</td><td th:text="${payment.method}">method</td><td th:text="${payment.reference ?: '—'}">ref</td><td th:text="'₹' + ${payment.amount}">amount</td></tr>
+            <tr th:if="${#lists.isEmpty(finePayments)}"><td colspan="5" class="table-empty">No fine payments recorded.</td></tr>
+        </tbody></table></div>
+    </section>
+</section></body></html>

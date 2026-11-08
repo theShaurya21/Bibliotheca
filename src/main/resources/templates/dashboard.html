@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: shell('Overview','dashboard',~{::content})}">
+<body><section th:fragment="content">
+    <div class="page-heading">
+        <div><span class="eyebrow">TUESDAY, AT A GLANCE</span><h1>Your library, <em>in focus.</em></h1><p class="muted">A clear view of the collection and the community around it.</p></div>
+        <a class="button button-gold" th:href="@{/circulation}">＋ New issue</a>
+    </div>
+    <div class="flash success" th:if="${success}" th:text="${success}"></div>
+    <div class="stats-grid">
+        <article class="stat-card feature-stat"><div class="stat-top"><span>CATALOGUE</span><span class="stat-symbol">▤</span></div><strong th:text="${bookTitles}">0</strong><small>distinct titles</small><div class="stat-foot"><span th:text="${physicalCopies}">0</span> total physical copies</div></article>
+        <article class="stat-card"><div class="stat-top"><span>ON THE SHELF</span><span class="stat-symbol green">◉</span></div><strong th:text="${availableCopies}">0</strong><small>available copies</small><div class="mini-track"><i th:style="'width:' + (${physicalCopies} == 0 ? 0 : ${availableCopies} * 100 / ${physicalCopies}) + '%'"></i></div></article>
+        <article class="stat-card"><div class="stat-top"><span>IN CIRCULATION</span><span class="stat-symbol">↗</span></div><strong th:text="${activeLoans}">0</strong><small>active loans</small><div class="stat-foot"><span th:text="${issuedToday}">0</span> issued today</div></article>
+        <article class="stat-card alert-stat"><div class="stat-top"><span>NEEDS ATTENTION</span><span class="stat-symbol red">!</span></div><strong th:text="${overdueLoans}">0</strong><small>overdue loans</small><div class="stat-foot"><span th:text="${returnedToday}">0</span> returns today</div></article>
+    </div>
+    <div class="dashboard-grid">
+        <section class="panel pulse-panel">
+            <div class="panel-heading"><div><span class="eyebrow">LIBRARY PULSE</span><h2>Today’s rhythm</h2></div><a class="text-link" th:href="@{/reports}">View reports ↗</a></div>
+            <div class="pulse-metrics">
+                <div><span class="pulse-icon">♙</span><div><strong th:text="${memberCount}">0</strong><small>registered readers</small></div></div>
+                <div><span class="pulse-icon">₹</span><div><strong>₹<span th:text="${#numbers.formatDecimal(potentialFines,1,2)}">0.00</span></strong><small>fines assessed to date</small></div></div>
+                <div><span class="pulse-icon">⌁</span><div><strong th:text="${unpaidReservations}">0</strong><small>titles in waiting queue</small></div></div>
+            </div>
+            <div class="chart-placeholder">
+                <div class="chart-label"><strong>Collection availability</strong><span>Current snapshot · live from catalogue</span></div>
+                <div class="availability-chart"><div class="chart-ring" th:style="'--available:' + (${physicalCopies} == 0 ? 0 : ${availableCopies} * 100 / ${physicalCopies}) + '%'"><div><strong th:text="${physicalCopies} == 0 ? '0%' : ${#numbers.formatDecimal(availableCopies * 100.0 / physicalCopies,1,0)} + '%'">0%</strong><small>available</small></div></div><div class="chart-legend"><span><i class="legend-dot gold-dot"></i>On shelf <b th:text="${availableCopies}">0</b></span><span><i class="legend-dot navy-dot"></i>On loan <b th:text="${physicalCopies - availableCopies}">0</b></span></div></div>
+            </div>
+        </section>
+        <section class="panel attention-panel">
+            <div class="panel-heading"><div><span class="eyebrow">LENDING DESK</span><h2>Overdue watch</h2></div><span class="count-pill" th:text="${overdueLoans} + ' loans'">0 loans</span></div>
+            <div class="empty-state compact" th:if="${#lists.isEmpty(overdueList)}"><span>✓</span><strong>All caught up</strong><small>No overdue items need your attention.</small></div>
+            <div class="attention-list" th:unless="${#lists.isEmpty(overdueList)}">
+                <div class="attention-item" th:each="loan : ${overdueList}">
+                    <div class="book-avatar" th:text="${#strings.substring(loan.book.title,0,1)}">B</div>
+                    <div class="attention-copy"><strong th:text="${loan.book.title}">Book title</strong><small th:text="${loan.member.fullName}">Member</small></div>
+                    <span class="overdue-days" th:text="${T(java.time.temporal.ChronoUnit).DAYS.between(loan.dueDate, T(java.time.LocalDate).now())} + 'd late'">2d late</span>
+                </div>
+            </div>
+            <a class="button button-outline button-wide" th:href="@{/circulation(status='overdue')}">Review overdue loans <span>→</span></a>
+        </section>
+    </div>
+    <section class="book-highlights">
+        <article class="panel shelf-panel">
+            <div class="panel-heading"><div><span class="eyebrow">WELL-LOVED TITLES</span><h2>Popular books</h2></div></div>
+            <div class="cover-book-list" th:if="${!#lists.isEmpty(popularBooks)}">
+                <a class="cover-book-card" th:each="book : ${popularBooks}" th:href="@{/books/{id}(id=${book.id})}">
+                    <span class="book-cover-frame shelf-cover"><img th:if="${book.coverUrl != null and !#strings.isEmpty(book.coverUrl)}" th:src="${book.coverUrl}" th:alt="${'Cover of ' + book.title}" loading="lazy" decoding="async" data-book-cover><span class="cover-placeholder" th:hidden="${book.coverUrl != null and !#strings.isEmpty(book.coverUrl)}"><strong th:text="${#strings.substring(book.title,0,1)}">B</strong><small>Bibliotheca</small></span></span>
+                    <span class="shelf-book-copy"><strong th:text="${book.title}">Book title</strong><small th:text="${book.author}">Author</small></span>
+                </a>
+            </div>
+            <div class="empty-state compact" th:if="${#lists.isEmpty(popularBooks)}"><strong>No lending history yet</strong><small>Popular titles will appear as books are borrowed.</small></div>
+        </article>
+        <article class="panel shelf-panel">
+            <div class="panel-heading"><div><span class="eyebrow">FRESH ON THE SHELVES</span><h2>Recent additions</h2></div><a class="text-link" th:href="@{/books}">Full catalogue ↗</a></div>
+            <div class="cover-book-list" th:if="${!#lists.isEmpty(recentBooks)}">
+                <a class="cover-book-card" th:each="book : ${recentBooks}" th:href="@{/books/{id}(id=${book.id})}">
+                    <span class="book-cover-frame shelf-cover"><img th:if="${book.coverUrl != null and !#strings.isEmpty(book.coverUrl)}" th:src="${book.coverUrl}" th:alt="${'Cover of ' + book.title}" loading="lazy" decoding="async" data-book-cover><span class="cover-placeholder" th:hidden="${book.coverUrl != null and !#strings.isEmpty(book.coverUrl)}"><strong th:text="${#strings.substring(book.title,0,1)}">B</strong><small>Bibliotheca</small></span></span>
+                    <span class="shelf-book-copy"><strong th:text="${book.title}">Book title</strong><small th:text="${book.author}">Author</small></span>
+                </a>
+            </div>
+            <div class="empty-state compact" th:if="${#lists.isEmpty(recentBooks)}"><strong>No books in the catalogue</strong><small>Add a title to see it here.</small></div>
+        </article>
+    </section>
+    <section class="panel recent-panel">
+        <div class="panel-heading"><div><span class="eyebrow">RECENT ACTIVITY</span><h2>Latest circulation</h2></div><a class="text-link" th:href="@{/circulation}">All transactions ↗</a></div>
+        <div class="table-wrap">
+            <table><thead><tr><th>READER</th><th>TITLE</th><th>ISSUED</th><th>DUE DATE</th><th>STATUS</th></tr></thead>
+                <tbody><tr th:each="loan : ${recentLoans}">
+                    <td><span class="reader-cell"><span class="mini-avatar" th:text="${#strings.substring(loan.member.fullName,0,1)}">A</span><span th:text="${loan.member.fullName}">Reader</span></span></td>
+                    <td class="book-title-cell"><a class="recent-book-link" th:href="@{/books/{id}(id=${loan.book.id})}"><span class="book-cover-frame recent-cover"><img th:if="${loan.book.coverUrl != null and !#strings.isEmpty(loan.book.coverUrl)}" th:src="${loan.book.coverUrl}" th:alt="${'Cover of ' + loan.book.title}" loading="lazy" decoding="async" data-book-cover><span class="cover-placeholder" th:hidden="${loan.book.coverUrl != null and !#strings.isEmpty(loan.book.coverUrl)}"><strong th:text="${#strings.substring(loan.book.title,0,1)}">B</strong></span></span><span th:text="${loan.book.title}">Title</span></a></td>
+                    <td th:text="${#temporals.format(loan.issueDate,'d MMM yyyy')}">date</td>
+                    <td th:text="${#temporals.format(loan.dueDate,'d MMM yyyy')}">date</td>
+                    <td><span class="status" th:classappend="${loan.status.name() == 'RETURNED'} ? 'status-returned' : (${loan.dueDate.isBefore(T(java.time.LocalDate).now())} ? 'status-overdue' : 'status-active')" th:text="${loan.status.name() == 'RETURNED' ? 'Returned' : (loan.dueDate.isBefore(T(java.time.LocalDate).now()) ? 'Overdue' : 'On loan')}">On loan</span></td>
+                </tr><tr th:if="${#lists.isEmpty(recentLoans)}"><td colspan="5" class="table-empty">No circulation activity yet. An issue will appear here.</td></tr></tbody>
+            </table>
+        </div>
+    </section>
+</section></body></html>

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: shell('Book details','books',~{::content})}">
+<body><section th:fragment="content">
+    <div class="page-heading"><div><span class="eyebrow">CATALOGUE / TITLE RECORD</span><h1>Book <em>details.</em></h1></div><a class="button button-gold" th:href="@{/books/{id}/edit(id=${book.id})}">Edit record</a></div>
+    <section class="panel book-detail">
+        <div class="detail-cover book-cover-frame"><img th:if="${book.coverUrl != null and !#strings.isEmpty(book.coverUrl)}" th:src="${book.coverUrl}" th:alt="${'Cover of ' + book.title}" loading="lazy" decoding="async" data-book-cover><span class="cover-placeholder" th:hidden="${book.coverUrl != null and !#strings.isEmpty(book.coverUrl)}"><strong th:text="${#strings.substring(book.title,0,1)}">B</strong><small>Bibliotheca collection</small></span></div>
+        <div class="detail-main"><span class="eyebrow" th:text="${book.category ?: 'THE COLLECTION'}">CATEGORY</span><h2 th:text="${book.title}">Title</h2><p class="detail-author" th:text="${book.author}">Author</p>
+            <p class="detail-description" th:text="${book.description ?: 'A new addition to the Bibliotheca collection.'}"></p>
+            <div class="detail-facts"><div><small>ISBN</small><strong th:text="${book.isbn ?: 'Not recorded'}"></strong></div><div><small>PUBLISHER</small><strong th:text="${book.publisher ?: 'Not recorded'}"></strong></div><div><small>YEAR</small><strong th:text="${book.publicationYear ?: '—'}"></strong></div><div><small>LANGUAGE</small><strong th:text="${book.language ?: '—'}"></strong></div></div>
+        </div>
+        <aside class="shelf-card"><span class="eyebrow">SMART SHELF FINDER</span><span class="shelf-icon">⌖</span><strong th:text="${book.shelfLocation ?: 'Location not set'}">Location</strong><small>Find this title in the physical collection.</small><div class="stock-number"><b th:text="${book.availableCopies}">0</b><span>available<br>of <i th:text="${book.totalCopies}">0</i> copies</span></div><a class="button button-dark button-wide" th:href="@{/circulation}">Go to issue desk →</a>
+            <a class="text-link" th:if="${book.previewUrl != null and !#strings.isEmpty(book.previewUrl)}" th:href="${book.previewUrl}" target="_blank" rel="noopener noreferrer">Open digital preview ↗</a>
+        </aside>
+    </section>
+    <section class="panel recent-panel"><div class="panel-heading"><div><span class="eyebrow">CIRCULATION RECORD</span><h2>Borrowing history</h2></div><span class="count-pill" th:text="${#lists.size(history)} + ' records'">0 records</span></div>
+        <div class="table-wrap"><table><thead><tr><th>READER</th><th>ISSUED</th><th>DUE</th><th>RETURNED</th><th>STATUS</th></tr></thead><tbody>
+            <tr th:each="loan : ${history}"><td th:text="${loan.member.fullName}">Member</td><td th:text="${loan.issueDate}">Issue</td><td th:text="${loan.dueDate}">Due</td><td th:text="${loan.returnDate ?: '—'}">Return</td><td><span class="status" th:classappend="${loan.status.name() == 'RETURNED'} ? 'status-returned' : 'status-active'" th:text="${loan.status}"></span></td></tr>
+            <tr th:if="${#lists.isEmpty(history)}"><td colspan="5" class="table-empty">No borrowing history for this title yet.</td></tr>
+        </tbody></table></div>
+        <form th:action="@{/books/{id}/delete(id=${book.id})}" method="post" class="delete-form" onsubmit="return confirm('Remove this title from the catalogue? Historical circulation prevents removal while loans are active.')"><button class="text-danger" type="submit">Remove title</button></form>
+    </section>
+</section></body></html>

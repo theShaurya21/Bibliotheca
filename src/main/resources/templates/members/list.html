@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: shell('Members','members',~{::content})}">
+<body><section th:fragment="content">
+    <div class="page-heading"><div><span class="eyebrow">OUR READING COMMUNITY</span><h1>Member <em>directory.</em></h1><p class="muted">People first. Reading follows.</p></div><a class="button button-gold" th:href="@{/members/new}">＋ Register member</a></div>
+    <div class="flash success" th:if="${success}" th:text="${success}"></div>
+    <section class="panel"><form class="toolbar-search" method="get" th:action="@{/members}"><label class="sr-only" for="memberSearch">Search members</label><span>⌕</span><input id="memberSearch" name="q" th:value="${q}" placeholder="Search name or email"><button class="button button-dark" type="submit">Search</button></form>
+        <div class="table-wrap"><table><thead><tr><th>MEMBER</th><th>MEMBERSHIP</th><th>DEPARTMENT</th><th>EXPIRES</th><th>STATUS</th><th></th></tr></thead><tbody>
+            <tr th:each="member : ${members.content}">
+                <td><a class="book-link" th:href="@{/members/{id}(id=${member.id})}"><span class="mini-avatar large" th:text="${#strings.substring(member.fullName,0,1)}">M</span><span><strong th:text="${member.fullName}">Member</strong><small th:text="${member.email}">email</small></span></a></td>
+                <td th:text="${member.membershipType ?: 'Standard'}">Student</td><td th:text="${member.department ?: '—'}">Department</td>
+                <td th:text="${member.membershipExpiry}">expiry</td>
+                <td><span class="status" th:classappend="${member.active and !member.membershipStart.isAfter(T(java.time.LocalDate).now()) and !member.membershipExpiry.isBefore(T(java.time.LocalDate).now())} ? 'status-active' : 'status-overdue'" th:text="${member.active and !member.membershipStart.isAfter(T(java.time.LocalDate).now()) and !member.membershipExpiry.isBefore(T(java.time.LocalDate).now())} ? 'Active' : 'Inactive / expired'">Active</span></td>
+                <td><a class="icon-link" th:href="@{/members/{id}/edit(id=${member.id})}">Edit</a></td>
+            </tr>
+            <tr th:if="${members.empty}"><td colspan="6"><div class="empty-state"><span>♙</span><strong>No members found</strong><small>Adjust your search or register a new reader.</small></div></td></tr>
+        </tbody></table></div>
+        <div class="pagination" th:if="${members.totalPages > 1}"><a th:if="${members.hasPrevious()}" th:href="@{/members(q=${q},page=${members.number-1})}">← Previous</a><span th:text="'Page ' + (${members.number+1}) + ' of ' + ${members.totalPages}">Page 1</span><a th:if="${members.hasNext()}" th:href="@{/members(q=${q},page=${members.number+1})}">Next →</a></div>
+        <div class="panel-foot"><span th:text="${members.totalElements} + ' registered readers'">0 readers</span><span>Member data is visible to authorised librarians only</span></div>
+    </section>
+</section></body></html>

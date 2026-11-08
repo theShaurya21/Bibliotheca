@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: shell('Catalogue','books',~{::content})}">
+<body><section th:fragment="content">
+    <div class="page-heading"><div><span class="eyebrow">THE COLLECTION</span><h1>Book <em>catalogue.</em></h1><p class="muted">Find a title, follow its shelf, keep the stories moving.</p></div><a class="button button-gold" th:href="@{/books/new}">＋ Add a book</a></div>
+    <div class="flash success" th:if="${success}" th:text="${success}"></div><div class="flash error" th:if="${error}" th:text="${error}"></div>
+    <section class="panel">
+        <form class="toolbar-search" method="get" th:action="@{/books}"><label class="sr-only" for="bookSearch">Search catalogue</label><span>⌕</span><input id="bookSearch" name="q" th:value="${q}" placeholder="Search title, author, ISBN or publisher">
+            <select name="category" aria-label="Filter by category"><option value="">All categories</option><option th:each="option : ${categories}" th:value="${option}" th:text="${option}" th:selected="${category == option}"></option></select>
+            <select name="availability" aria-label="Filter by availability"><option value="all" th:selected="${availability == 'all'}">All availability</option><option value="available" th:selected="${availability == 'available'}">Available</option><option value="unavailable" th:selected="${availability == 'unavailable'}">Unavailable</option></select>
+            <button class="button button-dark" type="submit">Search</button></form>
+        <div class="table-wrap"><table><thead><tr><th>TITLE / AUTHOR</th><th>ISBN</th><th>GENRE</th><th>SHELF</th><th>AVAILABILITY</th><th></th></tr></thead>
+            <tbody><tr th:each="book : ${books.content}">
+                <td><a class="book-link" th:href="@{/books/{id}(id=${book.id})}"><span class="cover-chip book-cover-frame"><img th:if="${book.coverUrl != null and !#strings.isEmpty(book.coverUrl)}" th:src="${book.coverUrl}" th:alt="${'Cover of ' + book.title}" loading="lazy" decoding="async" data-book-cover><span class="cover-placeholder" th:hidden="${book.coverUrl != null and !#strings.isEmpty(book.coverUrl)}"><strong th:text="${#strings.substring(book.title,0,1)}">B</strong><small>Bibliotheca</small></span></span><span><strong th:text="${book.title}">Title</strong><small th:text="${book.author}">Author</small></span></a></td>
+                <td th:text="${book.isbn ?: '—'}">ISBN</td><td th:text="${book.category ?: 'Uncategorised'}">Category</td><td th:text="${book.shelfLocation ?: '—'}">Shelf</td>
+                <td><span class="availability" th:classappend="${book.availableCopies == 0} ? 'none' : ''" th:text="${book.availableCopies} + ' / ' + ${book.totalCopies} + ' available'">1 / 2 available</span></td>
+                <td><a class="icon-link" th:href="@{/books/{id}/edit(id=${book.id})}" aria-label="Edit book">Edit</a></td>
+            </tr><tr th:if="${books.empty}"><td colspan="6"><div class="empty-state"><span>▤</span><strong>No books found</strong><small>Try another search or add a new title to the catalogue.</small></div></td></tr></tbody>
+        </table></div>
+        <div class="pagination" th:if="${books.totalPages > 1}"><a th:if="${books.hasPrevious()}" th:href="@{/books(q=${q},category=${category},availability=${availability},page=${books.number-1})}">← Previous</a><span th:text="'Page ' + (${books.number+1}) + ' of ' + ${books.totalPages}">Page 1</span><a th:if="${books.hasNext()}" th:href="@{/books(q=${q},category=${category},availability=${availability},page=${books.number+1})}">Next →</a></div>
+        <div class="panel-foot"><span th:text="${books.totalElements} + ' titles in the catalogue'">0 titles</span><span>Search across title, author, ISBN and publisher</span></div>
+    </section>
+</section></body></html>

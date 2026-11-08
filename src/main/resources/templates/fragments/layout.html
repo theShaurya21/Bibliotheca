@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:fragment="shell(title, active, content)">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title} + ' · Bibliotheca'">Bibliotheca</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+        <a class="brand" th:href="@{/dashboard}"><span class="brand-mark">B</span><span>BIBLIOTHECA<small>THE READING ROOM</small></span></a>
+        <div class="nav-caption">WORKSPACE</div>
+        <nav class="side-nav" aria-label="Main navigation">
+            <a th:href="@{/dashboard}" th:classappend="${active == 'dashboard'} ? 'active' : ''"><span class="nav-icon">⌂</span>Overview</a>
+            <a th:href="@{/books}" th:classappend="${active == 'books'} ? 'active' : ''"><span class="nav-icon">▤</span>Catalogue</a>
+            <a th:href="@{/members}" th:classappend="${active == 'members'} ? 'active' : ''"><span class="nav-icon">♙</span>Members</a>
+            <a th:href="@{/circulation}" th:classappend="${active == 'circulation'} ? 'active' : ''"><span class="nav-icon">↔</span>Circulation</a>
+            <a th:href="@{/reports}" th:classappend="${active == 'reports'} ? 'active' : ''"><span class="nav-icon">▥</span>Reports</a>
+        </nav>
+        <div class="sidebar-bottom">
+            <div class="sidebar-note"><span class="note-dot"></span><div><strong>Library pulse</strong><small>Every story finds a reader.</small></div></div>
+            <form th:action="@{/logout}" method="post">
+                <button class="profile-button" type="submit"><span class="avatar">L</span><span><strong sec:authentication="name">Librarian</strong><small>Administrator</small></span><span class="logout-arrow">↗</span></button>
+            </form>
+        </div>
+    </aside>
+    <div class="mobile-scrim" id="scrim"></div>
+    <section class="workspace">
+        <header class="topbar">
+            <button type="button" class="menu-toggle" id="menuToggle" aria-label="Toggle navigation">☰</button>
+            <div class="breadcrumbs">BIBLIOTHECA <span>/</span> <b th:text="${title}">Overview</b></div>
+            <div class="topbar-right"><span class="today" th:text="${#temporals.format(T(java.time.LocalDate).now(), 'EEE, d MMM')}">Today</span><span class="top-avatar">L</span></div>
+        </header>
+        <main class="main-content" th:replace="${content}"></main>
+    </section>
+</div>
+<script th:src="@{/js/app.js}" defer></script>
+</body>
+</html>

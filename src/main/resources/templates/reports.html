@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: shell('Reports','reports',~{::content})}">
+<body><section th:fragment="content">
+    <div class="page-heading"><div><span class="eyebrow">COLLECTION INTELLIGENCE</span><h1>Reports & <em>insights.</em></h1><p class="muted">Useful snapshots drawn from the actual catalogue and circulation ledger.</p></div></div>
+    <div class="report-grid">
+        <article class="report-card"><span class="eyebrow">INVENTORY</span><strong th:text="${#lists.size(books)}">0</strong><small>distinct titles</small><a th:href="@{/reports/export(type='inventory')}">Export inventory CSV ↗</a></article>
+        <article class="report-card"><span class="eyebrow">COMMUNITY</span><strong th:text="${#lists.size(members)}">0</strong><small><span th:text="${activeMembers}">0</span> eligible · registered readers</small><a th:href="@{/reports/export(type='members')}">Export member CSV ↗</a></article>
+        <article class="report-card"><span class="eyebrow">CIRCULATION</span><strong th:text="${#lists.size(activeLoans)}">0</strong><small>current active loans</small><a th:href="@{/reports/export(type='loans')}">Export loan CSV ↗</a></article>
+        <article class="report-card warning-card"><span class="eyebrow">OVERDUE WATCH</span><strong th:text="${#lists.size(overdue)}">0</strong><small>active overdue loans</small><span>Assessed fines: ₹<b th:text="${#numbers.formatDecimal(totalFines,1,2)}">0.00</b></span></article>
+        <article class="report-card"><span class="eyebrow">RESERVATIONS</span><strong th:text="${waitingReservations + readyReservations}">0</strong><small><span th:text="${waitingReservations}">0</span> waiting · <span th:text="${readyReservations}">0</span> ready</small></article>
+        <article class="report-card"><span class="eyebrow">FINE LEDGER</span><strong th:text="'₹' + ${#numbers.formatDecimal(collectedFines,1,2)}">₹0.00</strong><small>payments collected</small><span>Assessed: ₹<b th:text="${#numbers.formatDecimal(totalFines,1,2)}">0.00</b></span></article>
+    </div>
+    <section class="panel recent-panel"><div class="panel-heading"><div><span class="eyebrow">BORROWING ACTIVITY</span><h2>Issues in a date range</h2></div></div>
+        <form class="toolbar-search report-date-filter" method="get" th:action="@{/reports}">
+            <label for="from">From</label><input id="from" name="from" type="date" th:value="${from}">
+            <label for="to">To</label><input id="to" name="to" type="date" th:value="${to}">
+            <button class="button button-dark" type="submit">Apply dates</button>
+        </form>
+        <div class="table-wrap"><table><thead><tr><th>READER</th><th>TITLE</th><th>ISSUED</th><th>DUE</th><th>STATUS</th></tr></thead><tbody>
+            <tr th:each="loan : ${periodLoans}"><td th:text="${loan.member.fullName}">Reader</td><td th:text="${loan.book.title}">Title</td><td th:text="${loan.issueDate}">Issue</td><td th:text="${loan.dueDate}">Due</td><td th:text="${loan.status}">ACTIVE</td></tr>
+            <tr th:if="${#lists.isEmpty(periodLoans)}"><td colspan="5" class="table-empty">No issues were recorded in this date range.</td></tr>
+        </tbody></table></div>
+    </section>
+    <section class="panel recent-panel"><div class="panel-heading"><div><span class="eyebrow">ACTION REQUIRED</span><h2>Overdue loans</h2></div><a class="text-link" th:href="@{/circulation(status='overdue')}">Manage loans ↗</a></div>
+        <div class="table-wrap"><table><thead><tr><th>READER</th><th>TITLE</th><th>DUE DATE</th><th>DAYS LATE</th><th>ESTIMATED FINE</th></tr></thead><tbody>
+            <tr th:each="loan : ${overdue}"><td th:text="${loan.member.fullName}">Reader</td><td th:text="${loan.book.title}">Title</td><td th:text="${loan.dueDate}">Due</td><td th:text="${T(java.time.temporal.ChronoUnit).DAYS.between(loan.dueDate,T(java.time.LocalDate).now())}">1</td><td th:text="'₹' + ${#numbers.formatDecimal(T(java.time.temporal.ChronoUnit).DAYS.between(loan.dueDate,T(java.time.LocalDate).now())*fineRate,1,2)}">₹2.00</td></tr>
+            <tr th:if="${#lists.isEmpty(overdue)}"><td colspan="5" class="table-empty">No overdue loans. The collection is in good standing.</td></tr>
+        </tbody></table></div>
+    </section>
+    <section class="panel recent-panel"><div class="panel-heading"><div><span class="eyebrow">INVENTORY SNAPSHOT</span><h2>Books currently available</h2></div></div>
+        <div class="table-wrap"><table><thead><tr><th>TITLE</th><th>AUTHOR</th><th>CATEGORY</th><th>SHELF LOCATION</th><th>COPIES</th></tr></thead><tbody>
+            <tr th:each="book : ${books}" th:if="${book.availableCopies > 0}"><td th:text="${book.title}">Title</td><td th:text="${book.author}">Author</td><td th:text="${book.category}">Category</td><td th:text="${book.shelfLocation}">Shelf</td><td th:text="${book.availableCopies} + ' / ' + ${book.totalCopies}">1 / 2</td></tr>
+            <tr th:if="${#lists.isEmpty(books)}"><td colspan="5" class="table-empty">Add books to the catalogue to begin reporting.</td></tr>
+        </tbody></table></div>
+    </section>
+</section></body></html>

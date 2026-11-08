@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: shell('Member details','members',~{::content})}">
+<body><section th:fragment="content">
+    <div class="page-heading"><div><span class="eyebrow">READER SERVICES</span><h1 th:text="${memberId == null ? 'Welcome a new reader.' : 'Update member.'}">New member</h1><p class="muted">Keep membership details accurate and current.</p></div><a class="text-link" th:href="@{/members}">← Back to members</a></div>
+    <div class="panel form-panel"><form th:action="@{/members/save}" th:object="${member}" method="post" class="form-grid">
+        <input th:if="${memberId != null}" type="hidden" name="id" th:value="${memberId}">
+        <div class="field"><label for="fullName">Full name <b>*</b></label><input id="fullName" th:field="*{fullName}" required maxlength="140"><small class="field-error" th:errors="*{fullName}"></small></div>
+        <div class="field"><label for="email">Email <b>*</b></label><input id="email" type="email" th:field="*{email}" required maxlength="180"><small class="field-error" th:errors="*{email}"></small></div>
+        <div class="field"><label for="phone">Phone</label><input id="phone" th:field="*{phone}" maxlength="30"></div>
+        <div class="field"><label for="department">Department / course</label><input id="department" th:field="*{department}" maxlength="100"></div>
+        <div class="field"><label for="membershipType">Membership type</label><select id="membershipType" th:field="*{membershipType}"><option value="Student">Student</option><option value="Faculty">Faculty</option><option value="Community">Community</option></select></div>
+        <div class="field"><label for="membershipStart">Membership starts</label><input id="membershipStart" type="date" th:field="*{membershipStart}"></div>
+        <div class="field"><label for="membershipExpiry">Membership expires</label><input id="membershipExpiry" type="date" th:field="*{membershipExpiry}"></div>
+        <div class="field checkbox-field" th:if="${memberId != null}"><label><input type="checkbox" th:field="*{active}"> Membership active</label><small>Inactive members cannot borrow or reserve books.</small></div>
+        <div class="form-actions full"><a class="button button-outline" th:href="@{/members}">Cancel</a><button class="button button-dark" type="submit">Save member <span>→</span></button></div>
+    </form></div>
+</section></body></html>

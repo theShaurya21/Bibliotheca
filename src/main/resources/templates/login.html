@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sign in · Bibliotheca</title><link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body class="login-page">
+<main class="login-wrap">
+    <section class="login-art">
+        <a class="brand brand-light" th:href="@{/dashboard}"><span class="brand-mark">B</span><span>BIBLIOTHECA<small>THE READING ROOM</small></span></a>
+        <div class="login-quote"><span class="eyebrow">A LIBRARY IS A PROMISE</span><h1>Every book opens<br>another world.</h1><p>A thoughtful space to care for your collection and the people who bring it to life.</p></div>
+        <span class="art-caption">EST. FOR THE LOVE OF STORIES</span>
+    </section>
+    <section class="login-form-panel">
+        <div class="login-form">
+            <span class="eyebrow gold">LIBRARIAN PORTAL</span><h2>Welcome back</h2><p class="muted">Sign in to continue to your library.</p>
+            <div class="alert error" th:if="${param.error}">That username or password wasn’t recognised. Please try again.</div>
+            <div class="alert success" th:if="${param.logout}">You have been securely signed out.</div>
+            <form th:action="@{/login}" method="post">
+                <label for="username">Username</label><input id="username" name="username" autocomplete="username" required autofocus>
+                <label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" required>
+                <button class="button button-dark button-wide" type="submit">Sign in <span>→</span></button>
+            </form>
+            <p class="login-foot">A quieter kind of productivity.</p>
+        </div>
+    </section>
+</main>
+</body>
+</html>
